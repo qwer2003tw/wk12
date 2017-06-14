@@ -1,0 +1,208 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>食物銀行</title>
+
+<script type="text/javascript" src="http://ajax.microsoft.com/ajax/jquery/jquery-1.4.min.js">
+</script>
+    <!--[if lte IE 8]><script language="javascript" type="text/javascript"
+    src="../excanvas.min.js"></script><![endif]-->
+    <script language="javascript" type="text/javascript"
+    src="http://people.iola.dk/olau/flot/jquery.js"></script>
+    <script language="javascript" type="text/javascript"
+    src="http://people.iola.dk/olau/flot/jquery.flot.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/3.9.0/firebase.js"></script>
+</head>
+
+<body>
+Welcome to FoodBank<br>
+
+<div id="k">
+  <fb:login-button size="large" style="padding:20px 20px" scope="public_profile,email" onlogin="window.location.reload();">
+  使用FB帳號登入
+  </fb:login-button>
+</div>
+
+<div id="linfo">
+<form id="form1">
+  姓名:<input type="text" id="name" maxlength="8"><br>
+  金額:<input type="text" id="money" value="0" maxlength="8"><br>
+  捐物:
+  <select id="sele">
+  <option value="0">無</option>
+  <option value="米">米</option>
+  <option value="汽油">汽油</option>
+  <option value="火柴">火柴</option>
+  <option value="木頭">木頭</option>
+  <option value="石頭">石頭</option>
+  <option value="黃金">黃金</option>
+  </select>
+  <div id="many" style="display:inline">
+    數量:<input type="text" id="m" maxlength="4" size="5">
+    <button type="button" id="AddItem">加入</button>
+  </div>
+  <br>
+<select size="10" style="width:200px" id="ItemT"></select>
+<button type="button" id="RemoveItem">移除</button><br>
+<button type="button" id="Submit" style="background-color:rgb(85,152,122)">送出</button>
+</form>
+<a href="new1.html"><button>看捐款列表</button></a>
+</div>
+
+<fb:login-button
+  scope="public_profile,email"
+  show-faces="true"
+  auto_logout_link="true"
+  onlogin="window.location.reload();">
+</fb:login-button>
+
+
+
+
+<script>
+
+var loginBtn=$("#k");
+var many=$("#many");
+var linfo=$("#linfo");
+var dbRef;
+$( document ).ready(function() {
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId      : '101912310401605',
+      cookie     : true,
+      xfbml      : true,
+      status     : true,
+      version    : 'v2.8'
+    });
+    FB.AppEvents.logPageView();
+    checkLoginState();
+  };
+  (function(d, s, id){
+     var js, fjs = d.getElementsByTagName(s)[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement(s); js.id = id;
+     js.src = "//connect.facebook.net/zh_TW/sdk.js";
+     fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+   //
+   // Initialize Firebase
+var config = {
+  apiKey: "AIzaSyCgVem0uek8fkMZkGwXbqDkuAri7gE4l0I",
+  authDomain: "project-2715311773299776989.firebaseapp.com",
+  databaseURL: "https://project-2715311773299776989.firebaseio.com",
+  projectId: "project-2715311773299776989",
+  storageBucket: "project-2715311773299776989.appspot.com",
+  messagingSenderId: "886261986070"
+};
+firebase.initializeApp(config);
+dbRef=firebase.database().ref();
+//
+   many.hide();
+   linfo.hide();
+});
+
+
+
+function checkLoginState() {
+  FB.getLoginStatus(function(response) {
+if (response.status === 'connected')
+  {
+   var uid = response.authResponse.userID;
+   //alert(uid);
+ 	loginBtn.hide();
+  linfo.show();
+
+  FB.api('/me', function(response) {
+  //  console.log(response);
+    var name=response.name;
+    $("#name").val(name);
+  })
+//console.log(response);
+  }
+  else {
+  loginBtn.show();
+  linfo.hide();
+  }
+  });
+}
+//
+$("#AddItem").click(function()
+{
+  var re = /^[0-9]+$/;
+  if(!re.test($("#m").val()))
+  {
+    alert("數量必須是個數字");
+    return;
+  }
+  var str="<option>"+"物品:"+$("#sele").val()+","+"數量:"+$("#m").val()+"個"+"</option>";
+  $("#ItemT").append(str);
+  $("#sele").val(0);
+  $("#sele").change();
+})
+//
+$("#RemoveItem").click(function()
+{
+  var se=$("#ItemT").find(":selected");
+  se.remove();
+  //alert(se);
+})
+//
+$("#sele").change(function() {
+  if($(this).val()==0)
+    many.hide();
+  else
+    many.show();
+})
+//
+$("#Submit").click(function()
+{
+  //
+  var re = /^[0-9]+$/;
+  if(!re.test($("#money").val()))
+  {
+    alert("金額必須是個數字");
+    return;
+  }
+  if(!$("#name").val())
+  {
+    alert("姓名不得為空");
+    return;
+  }
+  //
+  if(confirm("真的要送出這些食物嗎?"))
+  {
+
+      var money=$("#money").val();
+      var itemtlength=$("#ItemT option").length;
+      if(money!=0)
+      uploaddb("金錢",money);
+      //alert(itemtlength);
+      for(i=0;i<itemtlength;i++)
+      {
+        var se=$("#ItemT option").eq(i).val();
+        //alert(se);
+        var k=se.split(",",4);
+        var iname=k[0].split(":",2)[1];
+        var imany=k[1].split(":",2)[1].slice(0,-1);
+        //alert(iname);
+        //alert(imany);
+        uploaddb(iname,imany);
+      }
+      alert("送出成功");
+        window.location.href = "new1.html";
+  }
+})
+//
+function uploaddb(m,k) {
+  　var Today=new Date();
+    var date=Today.getMonth()+1+"/"+Today.getDate()+" "+Today.getHours()+":"+Today.getMinutes()+":"+Today.getSeconds();
+    var name=$("#name").val();
+    var t=parseInt(k);
+    dbRef.push({'date':date,'name':name,'Itemname':m,'Itemmany':t})
+}
+</script>
+
+
+
+</body>
+</html>

@@ -1,0 +1,111 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>食物銀行</title>
+
+<script type="text/javascript" src="http://ajax.microsoft.com/ajax/jquery/jquery-1.4.min.js">
+</script>
+    <!--[if lte IE 8]><script language="javascript" type="text/javascript"
+    src="../excanvas.min.js"></script><![endif]-->
+    <script language="javascript" type="text/javascript"
+    src="http://people.iola.dk/olau/flot/jquery.js"></script>
+    <script language="javascript" type="text/javascript"
+    src="http://people.iola.dk/olau/flot/jquery.flot.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/3.9.0/firebase.js"></script>
+</head>
+
+<body>
+捐款名單<br>
+
+
+
+
+<fb:login-button
+  scope="public_profile,email,publish_actions"
+  show-faces="true"
+  auto_logout_link="true"
+  onlogin="window.location.reload();">
+</fb:login-button>
+
+<div id="info">
+  <table border="1" id="ta">
+  　<tr>
+  　<td width=60>捐贈者</td>
+    <td width=140>日期</td>
+    <td width=60>物品</td>
+    <td width=60>數量</td>
+  　</tr>
+  </table>
+</div>
+<a href="new.html"><button>回首頁</button></a>
+
+<script>
+
+var info=$("#info");
+var dbRef;
+$( document ).ready(function() {
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId      : '101912310401605',
+      cookie     : true,
+      xfbml      : true,
+      status     : true,
+      version    : 'v2.8'
+    });
+    FB.AppEvents.logPageView();
+    checkLoginState();
+  };
+  (function(d, s, id){
+     var js, fjs = d.getElementsByTagName(s)[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement(s); js.id = id;
+     js.src = "//connect.facebook.net/zh_TW/sdk.js";
+     fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+   //
+   // Initialize Firebase
+var config = {
+  apiKey: "AIzaSyCgVem0uek8fkMZkGwXbqDkuAri7gE4l0I",
+  authDomain: "project-2715311773299776989.firebaseapp.com",
+  databaseURL: "https://project-2715311773299776989.firebaseio.com",
+  projectId: "project-2715311773299776989",
+  storageBucket: "project-2715311773299776989.appspot.com",
+  messagingSenderId: "886261986070"
+};
+firebase.initializeApp(config);
+dbRef=firebase.database().ref();
+//
+dbRef.on('child_added', function(snapshot) {
+    var v=snapshot.val();
+    var k="<tr><td width=60>"+v.name+"</td>"+"<td width=140>"+v.date+"</td>"+"<td width=60>"+v.Itemname+"</td>"+"<td width=60>"+v.Itemmany+"</td></tr>"
+    $("#ta").append(k);
+});
+
+info.hide();
+});
+
+function ToIndex()
+{
+  window.location.href = "new.html";
+}
+
+function checkLoginState() {
+  FB.getLoginStatus(function(response) {
+if (response.status === 'connected')
+  {
+    info.show();
+  }
+  else
+  {
+    window.location.href = "new.html";
+  }
+})
+}
+
+//
+</script>
+
+
+
+</body>
+</html>
